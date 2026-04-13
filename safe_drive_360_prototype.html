@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c10;--bg2:#111318;--bg3:#181c23;--card:#1a1e28;
+  --border:#252a36;--border2:#2e3548;
+  --text:#e8eaf0;--muted:#6b7280;--dim:#3d4455;
+  --red:#e84545;--amber:#f59e0b;--green:#10b981;--blue:#3b82f6;
+  --teal:#14b8a6;--purple:#8b5cf6;
+  --accent:#e84545;
+  font-family:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:.5px}
+.logo-sub{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px}
+.status-row{display:flex;align-items:center;gap:16px}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.dot.amber{background:var(--amber)}
+.nav{display:flex;gap:4px}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .2s}
+.nav-btn.active,.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{color:var(--red);border-bottom:2px solid var(--red);border-radius:6px 6px 0 0}
+.layout{display:grid;grid-template-columns:220px 1fr;gap:0;height:calc(100vh - 56px)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:16px 0;overflow-y:auto}
+.sidebar-section{padding:8px 16px;font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1.5px;color:var(--dim);margin-top:8px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;cursor:pointer;transition:all .15s;color:var(--muted);border-left:2px solid transparent}
+.sidebar-item:hover{background:var(--bg3);color:var(--text)}
+.sidebar-item.active{background:var(--bg3);color:var(--text);border-left:2px solid var(--red)}
+.sidebar-item svg{flex-shrink:0}
+.badge{margin-left:auto;font-size:10px;font-family:'Space Mono',monospace;background:var(--red);color:#fff;padding:1px 6px;border-radius:10px}
+.badge.amber{background:var(--amber);color:#000}
+.badge.dim{background:var(--bg);color:var(--muted)}
+.main{overflow-y:auto;padding:24px;background:var(--bg)}
+.page{display:none}
+.page.active{display:block}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.metric-label{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;margin-bottom:8px}
+.metric-val{font-size:26px;font-weight:700;line-height:1}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.metric-val.red{color:var(--red)}
+.metric-val.green{color:var(--green)}
+.metric-val.amber{color:var(--amber)}
+.metric-val.blue{color:var(--blue)}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title span{color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;letter-spacing:0}
+.grid-main{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.incident-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.incident-row:last-child{border-bottom:none}
+.incident-row:hover{background:rgba(255,255,255,.02);border-radius:8px;padding:11px 8px;margin:0 -8px}
+.sev{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sev.red{background:var(--red)}
+.sev.amber{background:var(--amber)}
+.sev.green{background:var(--green)}
+.inc-info{flex:1;min-width:0}
+.inc-id{font-size:11px;font-family:'Space Mono',monospace;color:var(--muted)}
+.inc-desc{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inc-meta{display:flex;gap:8px;margin-top:2px}
+.tag{font-size:10px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.tag.red{background:rgba(232,69,69,.1);color:var(--red);border-color:rgba(232,69,69,.2)}
+.tag.amber{background:rgba(245,158,11,.1);color:var(--amber);border-color:rgba(245,158,11,.2)}
+.tag.green{background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.2)}
+.tag.blue{background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.2)}
+.tag.purple{background:rgba(139,92,246,.1);color:var(--purple);border-color:rgba(139,92,246,.2)}
+.inc-time{font-size:11px;font-family:'Space Mono',monospace;color:var(--dim);flex-shrink:0}
+.chain-vis{position:relative}
+.chain-block{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;transition:border-color .2s}
+.chain-block.verified{border-left:3px solid var(--green)}
+.chain-block.active{border-left:3px solid var(--blue);background:rgba(59,130,246,.05)}
+.chain-block:hover{border-color:var(--border2)}
+.chain-hash{font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis}
+.chain-icon{flex-shrink:0;color:var(--green)}
+.chain-time{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace}
+.chain-label{font-size:12px;font-weight:600;color:var(--text)}
+.chain-connector{width:1px;height:10px;background:var(--dim);margin:0 0 0 18px;opacity:.5}
+.mini-map{background:var(--bg3);border:1px solid var(--border);border-radius:10px;height:180px;position:relative;overflow:hidden}
+.map-grid{position:absolute;inset:0;opacity:.15}
+.map-pin{position:absolute;transform:translate(-50%,-50%)}
+.pulse-ring{position:absolute;width:20px;height:20px;border:2px solid var(--red);border-radius:50%;transform:translate(-50%,-50%);animation:pulse 2s infinite}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+.pin-dot{width:10px;height:10px;border-radius:50%;background:var(--red);position:absolute;transform:translate(-50%,-50%);z-index:2}
+.pin-dot.amber{background:var(--amber)}
+.pin-dot.green{background:var(--green)}
+.detail-panel{position:fixed;right:-440px;top:56px;width:430px;height:calc(100vh - 56px);background:var(--bg2);border-left:1px solid var(--border);z-index:40;overflow-y:auto;transition:right .3s cubic-bezier(.4,0,.2,1);padding:0}
+.detail-panel.open{right:0}
+.dp-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.dp-close{background:var(--bg3);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:auto}
+.dp-body{padding:20px}
+.dp-section{margin-bottom:20px}
+.dp-label{font-size:10px;font-family:'Space Mono',monospace;color:var(--dim);letter-spacing:1px;margin-bottom:6px}
+.dp-val{font-size:13px;color:var(--text);font-family:'Space Mono',monospace}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);font-family:'Syne',sans-serif;transition:all .15s}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-red:hover{opacity:.85}
+.btn-ghost{background:transparent;color:var(--muted)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-green{background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.3)}
+.btn-blue{background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.3)}
+.proof-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.15);border-radius:8px;font-size:11px;color:var(--green);font-family:'Space Mono',monospace;margin-bottom:8px}
+.video-thumb{width:100%;aspect-ratio:16/9;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:12px}
+.play-btn{width:44px;height:44px;background:rgba(232,69,69,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.enc-badge{position:absolute;top:8px;right:8px;font-size:9px;font-family:'Space Mono',monospace;background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3);padding:3px 8px;border-radius:4px}
+.upload-prog{margin-top:8px}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-bottom:4px}
+.prog-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width 1s}
+.prog-fill.green{background:var(--green)}
+.prog-fill.blue{background:var(--blue)}
+.prog-fill.amber{background:var(--amber)}
+.alert-row{display:flex;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.alert-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.alert-text{flex:1}
+.alert-title{font-size:12px;font-weight:600;color:var(--text)}
+.alert-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.alert-time{font-size:10px;font-family:'Space Mono',monospace;color:var(--dim)}
+.device-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+.device-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.device-id{font-family:'Space Mono',monospace;font-size:12px;color:var(--blue)}
+.device-model{font-size:13px;font-weight:600;color:var(--text)}
+.device-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dstat{text-align:center}
+.dstat-val{font-size:16px;font-weight:700}
+.dstat-lbl{font-size:10px;color:var(--muted)}
+.accel-vis{height:60px;background:var(--bg);border:1px solid var(--border);border-radius:6px;position:relative;overflow:hidden;margin-top:8px}
+.accel-line{position:absolute;inset:0}
+.tab-row{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.tab{padding:8px 16px;font-size:12px;font-family:'Space Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--text)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bar-chart{padding:4px 0}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:11px;color:var(--muted);width:80px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-val{font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);width:36px;text-align:right}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39;display:none}
+.overlay.show{display:block}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.grid-4{grid-template-columns:repeat(2,1fr)}.grid-main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#fff"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">SAFE DRIVE 360</div>
+      <div class="logo-sub">SECURE BLACK BOX NETWORK</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('incidents',this)">Incidents</button>
+    <button class="nav-btn" onclick="showPage('devices',this)">Devices</button>
+    <button class="nav-btn" onclick="showPage('blockchain',this)">Evidence Chain</button>
+  </nav>
+  <div class="status-row">
+    <div class="status-pill"><span class="dot"></span>LIVE · 3 ACTIVE</div>
+    <div class="status-pill"><span class="dot amber"></span>ESP32 · 4G</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">MONITOR</div>
+    <div class="sidebar-item active" onclick="showPage('dashboard',null,this)">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      Overview
+    </div>
+    <div class="sidebar-item" onclick="showPage('incidents',null,this)">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path d="M12 2L2 19h20L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 9v5M12 16v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Incidents
+      <span class="badge">3</span>
+    </div>
+    <div class="sidebar-item" onclick="showPage('devices',null,this)">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 19v2M16 19v2M5 22h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Devices
+      <span class="badge dim">12</span>
+    </div>
+    <div class="sidebar-item">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Fleet Map
+    </div>
+
+    <div class="sidebar-section">EVIDENCE</div>
+    <div class="sidebar-item" onclick="showPage('blockchain',null,this)">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><rect x="3" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="15" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="15" y="15" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M9 12h6M18 9v3M18 15v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Hash Chain
+      <span class="badge amber">NEW</span>
+    </div>
+    <div class="sidebar-item">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Vault Export
+    </div>
+    <div class="sidebar-item">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Court Reports
+    </div>
+
+    <div class="sidebar-section">INSURANCE</div>
+    <div class="sidebar-item">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Pending Claims
+      <span class="badge amber">7</span>
+    </div>
+    <div class="sidebar-item">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.5"/><path d="M16 3H8L6 7h12l-2-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Fraud Alerts
+      <span class="badge">2</span>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid-4">
+        <div class="metric">
+          <div class="metric-label">INCIDENTS TODAY</div>
+          <div class="metric-val red">3</div>
+          <div class="metric-sub">↑ 1 from yesterday</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">AVG UPLOAD TIME</div>
+          <div class="metric-val green">42s</div>
+          <div class="metric-sub">Target: &lt;60s ✓</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">EVIDENCE VERIFIED</div>
+          <div class="metric-val blue">187</div>
+          <div class="metric-sub">hash-chain intact</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">FRAUD BLOCKED</div>
+          <div class="metric-val amber">₹2.4 Cr</div>
+          <div class="metric-sub">this month</div>
+        </div>
+      </div>
+
+      <div class="grid-main">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="section-title">🔴 <span>Live Incident Feed</span></div>
+            <div id="incident-list">
+              <div class="incident-row" onclick="openDetail('INC-2024-0891')">
+                <div class="sev red"></div>
+                <div class="inc-info">
+                  <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0891</div><div class="tag red">CRITICAL</div><div class="tag blue">UPLOADING</div></div>
+                  <div class="inc-desc">High-G impact detected · Whitefield–Marathahalli Rd, Bangalore</div>
+                  <div class="inc-meta"><div class="tag">AES-GCM ✓</div><div class="tag">360° footage</div><div class="tag">GPS locked</div></div>
+                </div>
+                <div class="inc-time">2m ago</div>
+              </div>
+              <div class="incident-row" onclick="openDetail('INC-2024-0889')">
+                <div class="sev amber"></div>
+                <div class="inc-info">
+                  <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0889</div><div class="tag amber">TAMPER</div></div>
+                  <div class="inc-desc">Tamper alert triggered · Ring Road, Pune</div>
+                  <div class="inc-meta"><div class="tag">AES-GCM ✓</div><div class="tag">pre-event buffer</div></div>
+                </div>
+                <div class="inc-time">47m ago</div>
+              </div>
+              <div class="incident-row" onclick="openDetail('INC-2024-0887')">
+                <div class="sev green"></div>
+                <div class="inc-info">
+                  <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0887</div><div class="tag green">RESOLVED</div></div>
+                  <div class="inc-desc">Minor collision · Outer Ring Road, Chennai · Insurance claim filed</div>
+                  <div class="inc-meta"><div class="tag">court-ready PDF</div><div class="tag purple">fraud cleared</div></div>
+                </div>
+                <div class="inc-time">3h ago</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">📊 <span>Upload Performance (last 24h)</span></div>
+            <div style="display:flex;gap:16px;margin-bottom:12px">
+              <div style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:4px"></span>Under 60s</div>
+              <div style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:8px;height:8px;background:var(--amber);border-radius:50%;margin-right:4px"></span>60–120s</div>
+              <div style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%;margin-right:4px"></span>Over 120s</div>
+            </div>
+            <canvas id="perfChart" height="80"></canvas>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="section-title">🗺️ <span>Fleet Map — India</span></div>
+            <div class="mini-map" id="fleetMap">
+              <svg width="100%" height="100%" viewBox="0 0 300 180" style="position:absolute;inset:0;opacity:.2">
+                <path d="M80,10 L100,8 L130,15 L160,12 L180,20 L200,18 L220,30 L230,50 L225,70 L210,90 L220,110 L200,130 L180,150 L160,160 L140,165 L120,155 L100,145 L85,130 L70,110 L60,90 L65,70 L75,50 L70,30 Z" fill="none" stroke="var(--border2)" stroke-width="1.5"/>
+              </svg>
+              <!-- Incident pins -->
+              <div class="map-pin" style="left:62%;top:58%">
+                <div class="pulse-ring"></div>
+                <div class="pin-dot"></div>
+              </div>
+              <div class="map-pin" style="left:48%;top:72%">
+                <div class="pin-dot amber"></div>
+              </div>
+              <div class="map-pin" style="left:55%;top:80%">
+                <div class="pin-dot green"></div>
+              </div>
+              <div class="map-pin" style="left:35%;top:40%">
+                <div class="pin-dot green"></div>
+              </div>
+              <div style="position:absolute;bottom:8px;left:8px;font-size:10px;font-family:'Space Mono',monospace;color:var(--dim)">● active  ● tamper  ● resolved</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">🔔 <span>Alerts</span></div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:rgba(232,69,69,.15)">🚨</div>
+              <div class="alert-text">
+                <div class="alert-title">Impact &gt; 4.2G on DEV-0045</div>
+                <div class="alert-sub">Auto-upload triggered · 23 secs</div>
+              </div>
+              <div class="alert-time">2m</div>
+            </div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:rgba(245,158,11,.15)">⚠️</div>
+              <div class="alert-text">
+                <div class="alert-title">Tamper seal broken · DEV-0032</div>
+                <div class="alert-sub">Pre-event 30s buffer secured</div>
+              </div>
+              <div class="alert-time">47m</div>
+            </div>
+            <div class="alert-row">
+              <div class="alert-icon" style="background:rgba(16,185,129,.15)">✅</div>
+              <div class="alert-text">
+                <div class="alert-title">Hash chain verified · INC-0887</div>
+                <div class="alert-sub">Court-admissible evidence confirmed</div>
+              </div>
+              <div class="alert-time">3h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INCIDENTS PAGE -->
+    <div class="page" id="page-incidents">
+      <div class="section-title" style="margin-bottom:16px">⚡ <span>All Incidents</span></div>
+      <div class="tab-row">
+        <div class="tab active">All (23)</div>
+        <div class="tab">Critical (3)</div>
+        <div class="tab">Tamper (5)</div>
+        <div class="tab">Resolved (15)</div>
+      </div>
+      <div class="card">
+        <div class="incident-row" onclick="openDetail('INC-2024-0891')">
+          <div class="sev red"></div>
+          <div class="inc-info">
+            <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0891</div><div class="tag red">CRITICAL</div><div class="tag blue">UPLOADING</div></div>
+            <div class="inc-desc">High-G impact (4.2G) · Whitefield–Marathahalli Rd, Bangalore, KA</div>
+            <div class="inc-meta"><div class="tag">AES-GCM ✓</div><div class="tag">360°</div><div class="tag">GPS: 12.9716°N, 77.5946°E</div><div class="tag">Rider: Ankit Sharma</div></div>
+          </div>
+          <div class="inc-time">2m ago</div>
+        </div>
+        <div class="incident-row" onclick="openDetail('INC-2024-0889')">
+          <div class="sev amber"></div>
+          <div class="inc-info">
+            <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0889</div><div class="tag amber">TAMPER</div></div>
+            <div class="inc-desc">Tamper seal broken, device removed · Ring Road, Pune, MH</div>
+            <div class="inc-meta"><div class="tag">pre-buffer saved</div><div class="tag">30s evidence</div><div class="tag">Rider: Priya Nair</div></div>
+          </div>
+          <div class="inc-time">47m ago</div>
+        </div>
+        <div class="incident-row" onclick="openDetail('INC-2024-0887')">
+          <div class="sev green"></div>
+          <div class="inc-info">
+            <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0887</div><div class="tag green">RESOLVED</div><div class="tag purple">FRAUD PREVENTED</div></div>
+            <div class="inc-desc">Minor collision, fraudulent 3rd-party claim rejected · Chennai</div>
+            <div class="inc-meta"><div class="tag">court-ready</div><div class="tag">claim: ₹3.2L</div><div class="tag">fraud: ₹2.8L saved</div></div>
+          </div>
+          <div class="inc-time">3h ago</div>
+        </div>
+        <div class="incident-row" onclick="openDetail('INC-2024-0880')">
+          <div class="sev green"></div>
+          <div class="inc-info">
+            <div style="display:flex;align-items:center;gap:6px"><div class="inc-id">INC-2024-0880</div><div class="tag green">RESOLVED</div></div>
+            <div class="inc-desc">Pothole impact G-shock · MG Road, Hyderabad, TS</div>
+            <div class="inc-meta"><div class="tag">not collision</div><div class="tag">claim declined</div></div>
+          </div>
+          <div class="inc-time">1d ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVICES PAGE -->
+    <div class="page" id="page-devices">
+      <div class="section-title" style="margin-bottom:16px">📡 <span>Device Fleet (12 active)</span></div>
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="metric"><div class="metric-label">ONLINE</div><div class="metric-val green">11</div></div>
+        <div class="metric"><div class="metric-label">OFFLINE</div><div class="metric-val red">1</div></div>
+        <div class="metric"><div class="metric-label">AVG BATTERY</div><div class="metric-val amber">78%</div></div>
+        <div class="metric"><div class="metric-label">4G COVERAGE</div><div class="metric-val blue">100%</div></div>
+      </div>
+      <div class="device-card">
+        <div class="device-header">
+          <div style="width:36px;height:36px;background:rgba(232,69,69,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">📷</div>
+          <div>
+            <div class="device-id">DEV-0045 · Raspberry Pi 4 + ESP32</div>
+            <div class="device-model">SD360 v2.1 · Bangalore Fleet</div>
+          </div>
+          <div class="tag red" style="margin-left:auto">INCIDENT</div>
+        </div>
+        <div class="device-stats">
+          <div class="dstat"><div class="dstat-val red">4.2G</div><div class="dstat-lbl">peak impact</div></div>
+          <div class="dstat"><div class="dstat-val green">64%</div><div class="dstat-lbl">battery</div></div>
+          <div class="dstat"><div class="dstat-val blue">42s</div><div class="dstat-lbl">upload</div></div>
+        </div>
+        <div class="accel-vis">
+          <canvas id="accel1" width="400" height="60"></canvas>
+        </div>
+      </div>
+      <div class="device-card">
+        <div class="device-header">
+          <div style="width:36px;height:36px;background:rgba(16,185,129,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">📷</div>
+          <div>
+            <div class="device-id">DEV-0032 · Raspberry Pi 4 + ESP32</div>
+            <div class="device-model">SD360 v2.1 · Pune Fleet</div>
+          </div>
+          <div class="tag amber" style="margin-left:auto">TAMPER</div>
+        </div>
+        <div class="device-stats">
+          <div class="dstat"><div class="dstat-val amber">0.3G</div><div class="dstat-lbl">last G-force</div></div>
+          <div class="dstat"><div class="dstat-val amber">92%</div><div class="dstat-lbl">battery</div></div>
+          <div class="dstat"><div class="dstat-val green">18s</div><div class="dstat-lbl">upload</div></div>
+        </div>
+      </div>
+      <div class="device-card">
+        <div class="device-header">
+          <div style="width:36px;height:36px;background:rgba(59,130,246,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">📷</div>
+          <div>
+            <div class="device-id">DEV-0021 · Raspberry Pi 4 + ESP32</div>
+            <div class="device-model">SD360 v2.1 · Chennai Fleet</div>
+          </div>
+          <div class="tag green" style="margin-left:auto">ONLINE</div>
+        </div>
+        <div class="device-stats">
+          <div class="dstat"><div class="dstat-val green">0.1G</div><div class="dstat-lbl">idle</div></div>
+          <div class="dstat"><div class="dstat-val green">88%</div><div class="dstat-lbl">battery</div></div>
+          <div class="dstat"><div class="dstat-val green">—</div><div class="dstat-lbl">no incident</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCKCHAIN PAGE -->
+    <div class="page" id="page-blockchain">
+      <div class="section-title" style="margin-bottom:4px">🔗 <span>Cryptographic Evidence Chain</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">AES-GCM encrypted · SHA-256 hash chain · tamper-evident · court-admissible</div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="proof-bar">✓ All 5 blocks verified · Chain integrity: 100% · Last checked: 14 sec ago</div>
+        <div class="chain-block verified active">
+          <div style="width:28px;height:28px;background:rgba(59,130,246,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">🎥</div>
+          <div style="flex:1;min-width:0">
+            <div class="chain-label">Block #187 — Impact Footage</div>
+            <div class="chain-hash">SHA256: a3f8c2d1e5b7094f... ← prev: 9e2b7a14c...</div>
+            <div class="chain-time">2024-11-15 · 14:32:07 IST · INC-2024-0891</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="tag green">VERIFIED</div>
+            <div class="tag blue">AES-GCM</div>
+          </div>
+        </div>
+        <div class="chain-connector"></div>
+        <div class="chain-block verified">
+          <div style="width:28px;height:28px;background:rgba(16,185,129,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">📍</div>
+          <div style="flex:1;min-width:0">
+            <div class="chain-label">Block #186 — GPS + Telemetry</div>
+            <div class="chain-hash">SHA256: 9e2b7a14c0f3d8e... ← prev: 5c1a9b2d...</div>
+            <div class="chain-time">2024-11-15 · 14:32:05 IST · speed: 43 km/h</div>
+          </div>
+          <div class="tag green">VERIFIED</div>
+        </div>
+        <div class="chain-connector"></div>
+        <div class="chain-block verified">
+          <div style="width:28px;height:28px;background:rgba(245,158,11,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚡</div>
+          <div style="flex:1;min-width:0">
+            <div class="chain-label">Block #185 — Accelerometer Spike</div>
+            <div class="chain-hash">SHA256: 5c1a9b2d7f4e6c0... ← prev: 2d8f5a3c...</div>
+            <div class="chain-time">2024-11-15 · 14:32:04 IST · 4.2G impact</div>
+          </div>
+          <div class="tag green">VERIFIED</div>
+        </div>
+        <div class="chain-connector"></div>
+        <div class="chain-block verified">
+          <div style="width:28px;height:28px;background:rgba(139,92,246,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">🎞️</div>
+          <div style="flex:1;min-width:0">
+            <div class="chain-label">Block #184 — Pre-event Buffer (30s)</div>
+            <div class="chain-hash">SHA256: 2d8f5a3c6b1e9d7... ← prev: e1c4b8a2...</div>
+            <div class="chain-time">2024-11-15 · 14:31:34 IST · ring buffer</div>
+          </div>
+          <div class="tag green">VERIFIED</div>
+        </div>
+        <div class="chain-connector"></div>
+        <div class="chain-block verified">
+          <div style="width:28px;height:28px;background:rgba(232,69,69,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">🔑</div>
+          <div style="flex:1;min-width:0">
+            <div class="chain-label">Block #183 — Genesis / Device Boot</div>
+            <div class="chain-hash">SHA256: e1c4b8a2f5d9c3b... ← GENESIS</div>
+            <div class="chain-time">2024-11-15 · 06:14:22 IST · DEV-0045 boot</div>
+          </div>
+          <div class="tag green">VERIFIED</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">⚖️ <span>Court Export</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-green">📄 Export PDF Report</button>
+          <button class="btn btn-blue">🔗 Verify Hash Online</button>
+          <button class="btn btn-ghost">📋 Copy Chain JSON</button>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;line-height:1.8">
+          ADMISSIBILITY: Chain verified ✓<br>
+          ENCRYPTION: AES-256-GCM (NIST approved) ✓<br>
+          TIMESTAMP: NTP-synced, GPS cross-verified ✓<br>
+          UPLOAD: 42 seconds post-impact ✓<br>
+          INTEGRITY: Zero tampering detected ✓
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div>
+
+<!-- Detail Panel -->
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <div>
+      <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="dp-id">INC-2024-0891</div>
+      <div style="font-size:16px;font-weight:700;margin-top:2px" id="dp-title">High-G Impact</div>
+    </div>
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="dp-body">
+    <div class="video-thumb">
+      <div class="enc-badge">🔒 AES-GCM</div>
+      <div class="play-btn">
+        <svg width="16" height="16" fill="#fff" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+      </div>
+      <div style="position:absolute;bottom:8px;left:8px;font-size:10px;font-family:'Space Mono',monospace;color:rgba(255,255,255,.6)">360° · 1080p · 42MB</div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div class="prog-label"><span>Cloud Upload</span><span id="dp-prog-val">74%</span></div>
+      <div class="prog-bar"><div class="prog-fill blue" id="dp-prog" style="width:74%"></div></div>
+    </div>
+
+    <div class="proof-bar">✓ Hash chain intact · tamper-free · admissible</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="dp-section">
+        <div class="dp-label">DEVICE</div>
+        <div class="dp-val">DEV-0045</div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-label">IMPACT G-FORCE</div>
+        <div class="dp-val" style="color:var(--red)">4.2G</div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-label">SPEED AT IMPACT</div>
+        <div class="dp-val">43 km/h</div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-label">UPLOAD TIME</div>
+        <div class="dp-val" style="color:var(--green)">42 sec</div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-label">GPS</div>
+        <div class="dp-val" style="font-size:11px">12.97°N 77.59°E</div>
+      </div>
+      <div class="dp-section">
+        <div class="dp-label">TIMESTAMP</div>
+        <div class="dp-val" style="font-size:11px">14:32:07 IST</div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-label">ENCRYPTION</div>
+      <div style="font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:8px;border-radius:6px;line-height:1.8">
+        AES-256-GCM · IV: f3a2c1...<br>
+        Tag: 9b7e4d2a...<br>
+        Chain: SHA256 #187 ✓
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-red">🚨 File Insurance Claim</button>
+      <button class="btn btn-blue">📥 Download Evidence</button>
+      <button class="btn btn-ghost">📄 Court PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(id, navBtn, sidebarItem){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(navBtn){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));navBtn.classList.add('active')}
+  if(sidebarItem){document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));sidebarItem.classList.add('active')}
+  if(id==='devices') drawAccel();
+}
+
+function openDetail(inc){
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('dp-id').textContent = inc;
+  const titles={
+    'INC-2024-0891':'High-G Impact · Bangalore',
+    'INC-2024-0889':'Tamper Alert · Pune',
+    'INC-2024-0887':'Resolved: Fraud Prevented · Chennai',
+    'INC-2024-0880':'Pothole Shock · Hyderabad'
+  };
+  document.getElementById('dp-title').textContent = titles[inc]||inc;
+  let prog=74;
+  if(inc!=='INC-2024-0891'){prog=100;document.getElementById('dp-prog-val').textContent='100%';document.getElementById('dp-prog').style.width='100%';document.getElementById('dp-prog').className='prog-fill green';return;}
+  let v=74;
+  const t=setInterval(()=>{v=Math.min(100,v+2);document.getElementById('dp-prog').style.width=v+'%';document.getElementById('dp-prog-val').textContent=v+'%';if(v>=100){clearInterval(t);document.getElementById('dp-prog').className='prog-fill green'}},400);
+}
+function closeDetail(){document.getElementById('detailPanel').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+
+function drawAccel(){
+  const c=document.getElementById('accel1');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=c.parentElement.clientWidth||380;
+  ctx.clearRect(0,0,c.width,c.height);
+  const pts=[];
+  for(let i=0;i<80;i++){
+    if(i===62)pts.push(52);
+    else if(i===63)pts.push(58-Math.abs(i-65)*3);
+    else pts.push(30+Math.sin(i*0.4)*4+Math.random()*3);
+  }
+  ctx.beginPath();
+  ctx.strokeStyle='#e84545';
+  ctx.lineWidth=1.5;
+  for(let i=0;i<pts.length;i++){
+    const x=i*(c.width/pts.length);
+    const y=c.height-pts[i];
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.fillStyle='rgba(232,69,69,.08)';
+  ctx.lineTo(c.width,c.height);ctx.lineTo(0,c.height);ctx.closePath();ctx.fill();
+  ctx.fillStyle='var(--red)';ctx.font='10px Space Mono';ctx.fillStyle='#e84545';
+  ctx.fillText('▲ 4.2G impact',62*(c.width/80),c.height-55);
+}
+
+// Perf chart
+window.addEventListener('load',()=>{
+  const c=document.getElementById('perfChart');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=c.parentElement.clientWidth||500;
+  const bars=[{v:92,c:'#10b981'},{v:88,c:'#10b981'},{v:95,c:'#10b981'},{v:78,c:'#f59e0b'},{v:96,c:'#10b981'},{v:85,c:'#10b981'},{v:100,c:'#10b981'},{v:72,c:'#f59e0b'},{v:97,c:'#10b981'},{v:94,c:'#10b981'},{v:90,c:'#10b981'},{v:98,c:'#10b981'}];
+  const labels=['08h','09h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h'];
+  const w=c.width/bars.length;
+  bars.forEach((b,i)=>{
+    const bh=(b.v/100)*60;
+    ctx.fillStyle=b.c+'33';
+    ctx.fillRect(i*w+4,60-bh,w-8,bh);
+    ctx.fillStyle=b.c;
+    ctx.fillRect(i*w+4,60-bh,w-8,3);
+    ctx.fillStyle='#6b7280';
+    ctx.font='9px Space Mono';
+    ctx.textAlign='center';
+    ctx.fillText(labels[i],i*w+w/2,74);
+  });
+  ctx.fillStyle='#6b7280';
+  ctx.font='9px Space Mono';
+  ctx.textAlign='left';
+  ctx.fillText('%&lt;60s uploads',4,12);
+});
+</script>
+</body>
+</html>
